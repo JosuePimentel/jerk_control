@@ -14,7 +14,7 @@ tempos_t calcular_tempos ( float Jmax, float Amax, float Vm, float S);
 void imprimir_tempos (tempos_t *tempos, float dt, float Jmax, float Amax, float Vm, float S);
 
 int main() {
-    system('cls');
+    system("cls");
 
     float Jmax = 2.0f, Amax = 4.0f, Vm = 10.0f, S = 100.0f;
     
@@ -35,6 +35,8 @@ void imprimir_tempos (tempos_t *tempos, float dt, float Jmax, float Amax, float 
         return;
     }
 
+    fprintf(arquivo, "%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f\n", tempos->TA1, tempos->TA2, tempos->TA3, tempos->TA4, tempos->TA5, tempos->TA6, tempos->TA6);
+
     float t_end = tempos->TA7, t = 0.0f;
     float s = 0, v = 0, a = 0, j = 0;
 
@@ -52,30 +54,37 @@ void imprimir_tempos (tempos_t *tempos, float dt, float Jmax, float Amax, float 
             j = Jmax;
             a = Jmax*t;
             v = (Jmax*powf(t,2))/2 + VS;
+            s = (Jmax*powf(t,3))/6 + VS*t;
         } else if( (tempos->TA1 > t) && ( t < tempos->TA2) ) {
             j = 0;
             a = Amax;
             v = Amax*(t-tempos->TA1) + V1;
+            s = (Amax*powf((t-tempos->TA1), 2))/2 + V1*(t-tempos->TA1);
         } else if( (tempos->TA2 > t) && ( t < tempos->TA3) ) {
             j = (-Jmax);
             a = (-Jmax)*(t-tempos->TA2)+Amax;
             v = Amax*(t-tempos->TA2)-(Jmax*powf((t-tempos->TA2),2))/2 + V2;
+            s = (Amax*powf((t-tempos->TA2), 2))/2 - (Jmax*powf((t-tempos->TA2),3))/6 + V2*(t-tempos->TA2);
         } else if( (tempos->TA3 > t) && ( t < tempos->TA4) ) {
             j = 0;
             a = 0;
             v = V3;
+            s = V3*(t-tempos->TA3);
         } else if( (tempos->TA4 > t) && ( t < tempos->TA5) ) {
             j = (-Jmax);
             a = (-Jmax)*(t-tempos->TA4);
             v = (-Jmax*powf((t-tempos->TA4), 2))/2 + V4;
+            s = (-Jmax*powf((t-tempos->TA4), 3))/6 + V4*(t-tempos->TA4);
         } else if( (tempos->TA5 > t) && ( t < tempos->TA6) ) {
             j = 0;
             a = (-Amax);
             v = (-Amax*(t-tempos->TA5)) + V5;
+            s = (-Amax*powf((t-tempos->TA5), 2))/2 + V5*(t-tempos->TA5);
         } else if( (tempos->TA7 > t) && ( t < tempos->TA7) ) {
             j = Jmax;
             a = Jmax*(t-tempos->TA6)-Amax;
             v = (-Amax*(t-tempos->TA6)) + (Jmax*powf((t-tempos->TA6), 2))/2 + V6;
+            s = (-Amax*powf((t-tempos->TA6),2))/2 + (Jmax*powf((t-tempos->TA6), 3))/6 + V6*(t-tempos->TA6);
         }
 
         fprintf( arquivo, "%.2f,%.2f,%.2f,%.2f,%.2f\n", t, s, v, a, j );
