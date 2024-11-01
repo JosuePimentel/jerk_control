@@ -4,10 +4,8 @@
 
 typedef struct
 {
-    
     float T1, T2, T3, T4, T5, T6, T7;
     float TA1, TA2, TA3, TA4, TA5, TA6, TA7;
-
 } tempos_t;
 
 tempos_t calcular_tempos ( float Jmax, float Amax, float Vm, float S);
@@ -16,13 +14,11 @@ void imprimir_tempos (tempos_t *tempos, float dt, float Jmax, float Amax, float 
 int main() {
     system("cls");
 
-    float Jmax = 2.0f, Amax = 4.0f, Vm = 10.0f, S = 100.0f;
+    float Jmax = 2.0f, Amax = 1.4f, Vm = 5.0f, S = 10.0f;
     
     tempos_t T = calcular_tempos( Jmax, Amax, Vm, S);
-    
-    printf("T1: %.2f\nT2: %.2f\nT3: %.2f\nT4: %.2f\nT5: %.2f\nT6: %.2f\nT7: %.2f\n", T.T1 , T.T2 , T.T3 , T.T4 , T.T5 , T.T6 , T.T7);
 
-    int n_pontos = 1000;
+    int n_pontos = 100000;
 
     imprimir_tempos(&T, (T.TA7/n_pontos), Jmax, Amax, Vm, S);
 }
@@ -38,15 +34,15 @@ void imprimir_tempos (tempos_t *tempos, float dt, float Jmax, float Amax, float 
     fprintf(arquivo, "%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f\n", tempos->TA1, tempos->TA2, tempos->TA3, tempos->TA4, tempos->TA5, tempos->TA6, tempos->TA6);
 
     float t_end = tempos->TA7, t = 0.0f;
-    float s = 0, v = 0, a = 0, j = 0;
+    float s = 0.0f, v = 0.0f, a = 0.0f, j = 0.0f;
 
     float VS = 0.0f,
           V1 = (Jmax*powf(tempos->TA1, 2))/2 + VS,
           V2 = Amax*(tempos->TA2 - tempos->TA1) + V1,
           V3 = Amax*(tempos->TA3 - tempos->TA2) - (Jmax*powf((tempos->TA3 - tempos->TA2), 2))/2 + V2,
           V4 = V3,
-          V5 = (Jmax*powf((tempos->TA5 - tempos->TA4), 2))/2 + V4,
-          V6 = (-Amax*(tempos->TA6 - tempos->TA6)) + V5;
+          V5 = (-Jmax*powf((tempos->TA5 - tempos->TA4), 2))/2 + V4,
+          V6 = (-Amax*(tempos->TA6 - tempos->TA5)) + V5;
 
     while( t < t_end )
     {
@@ -62,7 +58,7 @@ void imprimir_tempos (tempos_t *tempos, float dt, float Jmax, float Amax, float 
             s = (Amax*powf((t-tempos->TA1), 2))/2 + V1*(t-tempos->TA1);
         } else if( (tempos->TA2 > t) && ( t < tempos->TA3) ) {
             j = (-Jmax);
-            a = (-Jmax)*(t-tempos->TA2)+Amax;
+            a = (-Jmax)*(t-tempos->TA2)+Amax;   
             v = Amax*(t-tempos->TA2)-(Jmax*powf((t-tempos->TA2),2))/2 + V2;
             s = (Amax*powf((t-tempos->TA2), 2))/2 - (Jmax*powf((t-tempos->TA2),3))/6 + V2*(t-tempos->TA2);
         } else if( (tempos->TA3 > t) && ( t < tempos->TA4) ) {
@@ -93,6 +89,7 @@ void imprimir_tempos (tempos_t *tempos, float dt, float Jmax, float Amax, float 
         t += dt;
     }
 
+    system("python index.py");
     fclose(arquivo);
 }
 
@@ -114,20 +111,19 @@ tempos_t calcular_tempos ( float Jmax, float Amax, float Vmax, float S) {
         // A2 = (V2 - V1)/(T2_Temp - T1_Temp); // (T2 - T1) mas t2 ainda nao foi descoberto
         A2 = Amax; // Suposição que faz sentido: Se há o segmento II, então no segmento 2 a aceleração se mantem constante no Amax, como é possível ver no gráfico da aceleração PG.20
         T2_Temp = (Vmax - 2*V1)/A2;
-        T3_Temp = T1_Temp;
     } else {
         T1_Temp = sqrtf((Vmax/Jmax));
         T2_Temp = 0;
-        T3_Temp = T1_Temp;
     }
 
+    T3_Temp = T1_Temp;
     V3 = Vmax;
 
     S1 = V1*T1_Temp;
     S2 = T2_Temp ? (V2-V1)*(T2_Temp-T1_Temp) : 0;
     S3 = T2_Temp ? (V3-V2)*(T3_Temp-T2_Temp) : (V3-V1)*(T3_Temp-T1_Temp);
 
-    if((S1 + S3) > S/2) {
+    if((S1 + S3) > (S/2)) {
         T1_Temp = powf(((0.5*S)/Jmax), 1.0/3.0); // Raiz cubica, o que esta no sol vai pra sombra e oq esta na sombra vai pro sol.
         T2_Temp = 0;
         T3_Temp = T1_Temp;
